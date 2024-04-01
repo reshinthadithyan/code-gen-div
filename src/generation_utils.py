@@ -60,9 +60,9 @@ class Embd:
 
 
 if __name__ == "__main__":
-    dummy_generation_path = "/weka/home-reshinth/work/benchmarks/bigcode-evaluation-harness/generations_humaneval.json"
+    dummy_generation_path = "/weka/ckpts/stablecode_modelablations/deepseek-ai/deepseek-coder-6.7b-base/{py}_gens_temp_0.2.json"
     embd_class = Embd(dummy_generation_path,                   
-                      embd_file_name="ds_1.3B_temp=0.2_embd.pt"
+                      embd_file_name="ds_6.7b_temp=0.2_embd.pt"
     )
     embd_class.remove_duplicates_loop(embd_class.generation_dict)
     embd_vector = embd_class.embd_all_solutions()

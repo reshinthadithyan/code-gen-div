@@ -20,7 +20,7 @@ def average_pairwise_distance(data):
     """
     pairwise_distances = torch.cdist(data, data)
     upper_triangular = pairwise_distances.triu(diagonal=1)
-    return torch.mean(upper_triangular[upper_triangular != 0])
+    return torch.mean(upper_triangular)
 
 def silhouette_coefficient(data, centroid, cluster_labels):
     """

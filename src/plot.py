@@ -21,9 +21,7 @@ def create_labels(tensor_dict):
         for i in range(tensor_dict[key].shape[0]):
             x.append(tensor_dict[key][i].numpy())
             labels.append(key)
-
     x = np.asarray(x)
-    print(x.shape)
     return x, labels
 
 
@@ -41,7 +39,10 @@ def process_and_plot_pca(tensor_path):
     reduced_df['labels'] = labels
     # Plotting
     plt.figure(figsize=(10, 10))
-    sns.scatterplot(data=reduced_df, x='PC1', y='PC2', hue=labels, palette='tab10',legend=None, alpha=0.5)
+    import colorcet as cc
+    # palette = sns.color_palette(cc.glasbey , n_colors=164)
+    sns.color_palette("flare", as_cmap=True)
+    sns.scatterplot(data=reduced_df, x='PC1', y='PC2', hue=labels,legend=None)
     #Add title
     plt.title(f'PCA projection of {tensor_path.split("/")[-1]}')        
     plot_save_path = tensor_path.split("/")[-1].replace(".pt","") + "_pca_plot.png"
@@ -49,5 +50,5 @@ def process_and_plot_pca(tensor_path):
 
 if __name__ == "__main__":
     # Load the torch tensor
-    tensor_path = "/weka/home-reshinth/work/code-gen-div/embd_path/ds_1.3B_temp=0.2_embd.pt"   
+    tensor_path = "/weka/home-reshinth/work/code-gen-div/embd_path/ds_6.7b_temp=0.2_embd.pt"   
     process_and_plot_pca(tensor_path)
