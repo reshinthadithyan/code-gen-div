@@ -8,7 +8,7 @@ import datasets
 
 # from src.metrics import get_centroid, sum_squared_errors, average_pairwise_distance, silhouette_coefficient
 
-EMBD_PATH = "embd_path"
+EMBD_PATH = "embd_path/stripped_prompt"
 
 def load_json_path(path):
     with open(path, "r") as f:
@@ -30,7 +30,7 @@ class Embd:
         self.human_eval_benchmark = get_human_eval_ds()
         self.device = device
         self.remove_prompt : bool = remove_prompt
-
+        print(f"Removed prompt: {self.remove_prompt}")
 
     def remove_duplicates(self,generation_list):
         """ dirty way of removing exact duplicates from a list of strings """
@@ -40,8 +40,8 @@ class Embd:
         for i in range(len(generation_dict)):
             generation_dict[i] = self.remove_duplicates(generation_dict[i])
             if self.remove_prompt:
-                for j in range(len(generation_dict[i])):                    
-                    generation_dict[i][j]=generation_dict[i][j].split('"""')[-1]
+                for j in range(len(generation_dict[i])):  
+                    generation_dict[i][j]=generation_dict[i][j].split('"""')[-1].strip()
 
         self.generation_dict = generation_dict
         return generation_dict
@@ -62,18 +62,29 @@ class Embd:
                     soln_list.append(embd_sample_torch)
                 self.vector_list[i] = torch.stack(soln_list).squeeze(1)
             torch.save(self.vector_list,self.embd_file_path)
+            print(f"Saved embd to {self.embd_file_path}...")
             return self.vector_list
 
 
     
+
+def main(args):
+    if args.embd_file_name is None:
+        args.embd_file_name = "embd_"+args.generation_dict_path.split("/")[-1].replace(".json",".pt")
+    embd_class = Embd(args.generation_dict_path,
+                      embd_file_name=args.embd_file_name
+    )
+    embd_class.remove_duplicates_loop(embd_class.generation_dict)
+    embd_vector = embd_class.embd_all_solutions()
+    return embd_vector
     
     
 
 
 if __name__ == "__main__":
-    dummy_generation_path = "/weka/ckpts/stablecode_modelablations/deepseek-ai/deepseek-coder-6.7b-base/{py}_gens_temp_0.2.json"
-    embd_class = Embd(dummy_generation_path,                   
-                      embd_file_name="ds_6.7b_temp=0.2_embd.pt"
-    )
-    embd_class.remove_duplicates_loop(embd_class.generation_dict)
-    embd_vector = embd_class.embd_all_solutions()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--generation_dict_path",type=str,required=True)
+    parser.add_argument("--embd_file_name",type=str,default=None)
+    args = parser.parse_args()
+    main(args)

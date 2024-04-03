@@ -14,11 +14,9 @@ from metrics import get_centroid, sum_squared_errors, average_pairwise_distance,
 
 
 
-def split_different_paths(embd_paths):
+def split_different_paths(embd_path):
 
-    embd_path_list = embd_paths.split(",")
-    pwd = os.getcwd()
-    embd_path_list = [os.path.join(pwd, path) for path in embd_path_list]
+    embd_path_list =[ os.path.join(embd_path,i) for i in  os.listdir(embd_path) ]
     return embd_path_list
 
     
@@ -42,11 +40,10 @@ def get_stats(embd_dict,prob_index):
 
 def main(args):
 
-    embd_paths = split_different_paths(args.embd_paths)
+    embd_paths = split_different_paths(args.embd_path)
 
     embd_dict_map = {}
     stats_dict_map = {}
-    sample = 160
     for embd_path in tqdm(embd_paths, desc="Processing Embedding Files",leave=False):
         embd_dict_map[embd_path] = load_torch_tensor(embd_path)
         stats_dict = {
@@ -61,9 +58,14 @@ def main(args):
             stats_dict["sse"].append(sse.item())
             stats_dict["apd"].append(apd.item())
             stats_dict["sc"].append(sc)
+        #Average sse,apd
+        print(embd_path.split("/")[-1].replace(".pt", "") + " Stats")
+        print(f"Average sse: {np.mean(stats_dict['sse'])}")
+        print(f"Average apd: {np.mean(stats_dict['apd'])}")
+        print("####")
         stats_dict_map[embd_path] = stats_dict
 
-    write_stats_to_file(stats_dict_map, "collated_stats/stats.json")
+    write_stats_to_file(stats_dict_map, "collated_stats/stats_stripped.json")
     # Average all stats per embd
     avg_stats_dict = {}
     for embd_path in stats_dict_map:
@@ -91,13 +93,14 @@ def main(args):
         reduced_df['labels'] = labels
         # Plotting
         plt.figure(figsize=(10, 10))
-        import colorcet as cc
         sns.color_palette("flare")
         sns.scatterplot(data=reduced_df, x='PC1', y='PC2', hue=labels)
         #Add title
         plt.title(f'PCA projection of problem {prob_index} across different model gens')
         plot_save_path = f"plots/probwise/problem_{prob_index}_pca_plot.png"
         plt.savefig(plot_save_path)
+        plt.close()
+        
 
     for i in tqdm(range(163)):
         plot_ind_prob(embd_dict_map, i)
@@ -108,7 +111,8 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--embd_paths", default="embd_path/ds_1.3B_temp=0.2_embd.pt,embd_path/mistral_7B_inst_v2_temp=0.2_embd.pt,embd_path/sc_3b_temp=0.2_embd.pt,embd_path/sc_inst_3b_temp=0.2_embd.pt" , type=str)
+    #parser.add_argument("--embd_paths", default="embd_path/ds_33b_inst_temp=0.2_embd.pt,embd_path/ds_1.3B_temp=0.2_embd.pt,embd_path/mistral_7B_inst_v2_temp=0.2_embd.pt,embd_path/sc_3b_temp=0.2_embd.pt,embd_path/sc_inst_3b_temp=0.2_embd.pt" , type=str)
+    parser.add_argument("--embd_path", default="/weka/home-reshinth/work/code-gen-div/embd_path/stripped_prompt") 
 
     args = parser.parse_args()
     main(args)
